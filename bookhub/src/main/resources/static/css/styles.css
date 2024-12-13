@@ -1,0 +1,20 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.content-wrapper {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.pagination .page-item:not(.disabled) .page-link {
+    color: #146c43;
+}
+
+.pagination .page-item.active .page-link {
+    color: #fff;
+    background-color: #146c43;
+    border-color: #146c43;
+}

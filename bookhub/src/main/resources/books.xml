@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="book1" class="com.example.bookhub.model.entity.Book">
+        <property name="title" value="Mistrz i Małgorzata" />
+        <property name="author" value="Michaił Bułhakow" />
+        <property name="publicationYear" value="1967" />
+        <property name="genre" value="FICTION" />
+        <property name="language" value="POLISH" />
+        <property name="isbn" value="978-83-244-0146-2" />
+        <property name="description" value="Powieść łącząca realizm i fantastykę, o wizytach szatana w Moskwie." />
+        <property name="pageCount" value="480" />
+        <property name="imagePath" value="example_book_mistrz_i_malgorzata.jpg" />
+    </bean>
+
+    <bean id="book2" class="com.example.bookhub.model.entity.Book">
+        <property name="title" value="1984" />
+        <property name="author" value="George Orwell" />
+        <property name="publicationYear" value="1949" />
+        <property name="genre" value="DYSTOPIA" />
+        <property name="language" value="ENGLISH" />
+        <property name="isbn" value="978-0-452-28423-4" />
+        <property name="description" value="Klasyka literatury dystopijnej, przedstawiająca totalitarną przyszłość." />
+        <property name="pageCount" value="328" />
+        <property name="imagePath" value="example_book_1984.jpg" />
+    </bean>
+
+    <bean id="book3" class="com.example.bookhub.model.entity.Book">
+        <property name="title" value="Zbrodnia i kara" />
+        <property name="author" value="Fiodor Dostojewski" />
+        <property name="publicationYear" value="1866" />
+        <property name="genre" value="CLASSIC" />
+        <property name="language" value="POLISH" />
+        <property name="isbn" value="978-83-06-03246-5" />
+        <property name="description" value="Rozważania moralne młodego studenta popełniającego morderstwo." />
+        <property name="pageCount" value="672" />
+        <property name="imagePath" value="example_book_zbrodnia_i_kara.jpg" />
+    </bean>
+
+    <bean id="book4" class="com.example.bookhub.model.entity.Book">
+        <property name="title" value="Harry Potter i Kamień Filozoficzny" />
+        <property name="author" value="J.K. Rowling" />
+        <property name="publicationYear" value="1997" />
+        <property name="genre" value="FANTASY" />
+        <property name="language" value="POLISH" />
+        <property name="isbn" value="978-83-7278-007-4" />
+        <property name="description" value="Pierwsza część przygód młodego czarodzieja w świecie magii." />
+        <property name="pageCount" value="320" />
+        <property name="imagePath" value="example_book_harry-potter-i-kamien-filozoficzny.jpg" />
+    </bean>
+
+    <bean id="book5" class="com.example.bookhub.model.entity.Book">
+        <property name="title" value="Cień wiatru" />
+        <property name="author" value="Carlos Ruiz Zafón" />
+        <property name="publicationYear" value="2001" />
+        <property name="genre" value="FICTION" />
+        <property name="language" value="POLISH" />
+        <property name="isbn" value="978-83-7301-973-7" />
+        <property name="description" value="Niezapomniana opowieść o miłości, tajemnicy i pasji do książek." />
+        <property name="pageCount" value="520" />
+        <property name="imagePath" value="example_book_cien_wiatru.jpeg" />
+    </bean>
+</beans>
