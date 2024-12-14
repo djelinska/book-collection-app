@@ -11,6 +11,9 @@
     <div th:replace="fragments :: navbar"></div>
 
     <div class="container mt-5">
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Twój Profil</h1>
             <a href="/profile/edit" class="btn btn-success">Edytuj profil</a>
@@ -21,13 +24,16 @@
         <a href="/profile/backup" class="btn btn-success mb-5">Pobierz kopię zapasową</a>
 
         <div class="mb-5">
-            <form th:action="@{/profile/import}" method="post" enctype="multipart/form-data">
+            <small class="text-muted">Uwaga! Podczas importu dane dotyczące półek zostaną nadpisane</small>
+            <form th:action="@{/profile/import}" method="post" enctype="multipart/form-data" class="mt-2">
                 <div class="input-group">
                     <input type="file" class="form-control" id="file" name="file" />
                     <button type="submit" class="btn btn-success">Importuj kopię zapasową</button>
                 </div>
+                <div th:if="${error}">
+                    <p th:text="${error}" class="text-danger"></p>
+                </div>
             </form>
-            <p class="text-danger mt-2">Uwaga! Podczas importu dane dotyczące półek zostaną nadpisane</p>
         </div>
 
         <form th:action="@{/profile/delete}" method="post" class="d-inline" onsubmit="return confirm('Czy na pewno chcesz usunąć konto?')">

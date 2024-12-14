@@ -1,10 +1,16 @@
 package com.example.bookhub.service;
 
 import com.example.bookhub.enums.Role;
+import com.example.bookhub.model.dto.ShelfBackupDTO;
+import com.example.bookhub.model.dto.UserBackupDTO;
 import com.example.bookhub.model.dto.UserRegistrationDTO;
 import com.example.bookhub.model.dto.UserUpdateDTO;
+import com.example.bookhub.model.entity.Book;
+import com.example.bookhub.model.entity.Shelf;
 import com.example.bookhub.model.entity.User;
 import com.example.bookhub.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,6 +18,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,22 +31,11 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ShelfService shelfService;
+    private final BookService bookService;
+    private final ShelfBookFacade shelfBookFacade;
+    private final ObjectMapper jacksonObjectMapper;
 
-    public String registerUser(@Validated UserRegistrationDTO userRegistrationDTO, BindingResult result) {
-        if (result.hasErrors()) {
-            return "auth/register";
-        }
-
-        if (userRepository.findByUsername(userRegistrationDTO.getUsername()).isPresent()) {
-            result.rejectValue("username", "error.username", "Nazwa użytkownika już istnieje");
-            return "auth/register";
-        }
-
-        if (!userRegistrationDTO.getPassword().equals(userRegistrationDTO.getConfirmPassword())) {
-            result.rejectValue("confirmPassword", "error.confirmPassword", "Hasła nie są takie same");
-            return "auth/register";
-        }
-
+    public void registerUser(@Validated UserRegistrationDTO userRegistrationDTO) {
         User user = new User();
         user.setUsername(userRegistrationDTO.getUsername());
         user.setPassword(passwordEncoder.encode(userRegistrationDTO.getPassword()));
@@ -42,8 +43,10 @@ public class UserService {
         userRepository.save(user);
 
         shelfService.initializeUserShelves(user);
+    }
 
-        return "auth/login";
+    public boolean usernameExists(String username) {
+        return userRepository.findByUsername(username).isPresent();
     }
 
     public User getCurrentUser() {
@@ -51,10 +54,9 @@ public class UserService {
 
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Użytkownik o podanej nazwie nie istnieje: " + username));
-
     }
 
-    public String updateUserProfile(@Validated UserUpdateDTO userUpdateDTO, BindingResult result) {
+    public String updateUserProfile(@Validated UserUpdateDTO userUpdateDTO, BindingResult result, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "profile/profile-edit";
         }
@@ -73,10 +75,63 @@ public class UserService {
 
         currentUser.setPassword(passwordEncoder.encode(userUpdateDTO.getNewPassword()));
         userRepository.save(currentUser);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Profil został zaktualizowany pomyślnie.");
+
         return "redirect:/profile";
     }
 
     public void deleteUser(User user) {
         userRepository.delete(user);
+    }
+
+    @Transactional
+    public byte[] createBackup(User user) throws IOException {
+        List<ShelfBackupDTO> shelvesBackup = new ArrayList<>();
+
+        for (Shelf shelf : user.getShelves()) {
+            ShelfBackupDTO shelfBackupDTO = new ShelfBackupDTO();
+            shelfBackupDTO.setName(shelf.getName());
+
+            List<Long> bookIds = shelf.getBooks().stream()
+                    .map(Book::getId)
+                    .collect(Collectors.toList());
+            shelfBackupDTO.setBookIds(bookIds);
+
+            shelvesBackup.add(shelfBackupDTO);
+        }
+
+        UserBackupDTO userBackupDTO = new UserBackupDTO();
+        userBackupDTO.setUsername(user.getUsername());
+        userBackupDTO.setShelves(shelvesBackup);
+
+        return jacksonObjectMapper.writeValueAsBytes(userBackupDTO);
+    }
+
+    @Transactional
+    public void importBackup(String json) throws Exception {
+        UserBackupDTO userBackupDTO = jacksonObjectMapper.readValue(json, UserBackupDTO.class);
+
+        User user = getCurrentUser();
+
+        shelfService.deleteUserShelves(user);
+        shelfService.initializeUserShelves(user);
+
+        for (ShelfBackupDTO shelfBackupDTO : userBackupDTO.getShelves()) {
+            Shelf shelf = shelfService.findShelfByNameAndUser(shelfBackupDTO.getName(), user);
+            if (shelf == null) {
+                shelf = new Shelf();
+                shelf.setName(shelfBackupDTO.getName());
+                shelf.setUser(user);
+                shelfService.saveShelf(shelf);
+            }
+
+            for (Long bookId : shelfBackupDTO.getBookIds()) {
+                Book book = bookService.findBookById(bookId);
+                if (book != null) {
+                    shelfBookFacade.addBookToShelf(bookId, shelf.getId());
+                }
+            }
+        }
     }
 }

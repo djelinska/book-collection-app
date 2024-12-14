@@ -2,6 +2,7 @@ package com.example.bookhub.service;
 
 import com.example.bookhub.enums.Genre;
 import com.example.bookhub.enums.Language;
+import com.example.bookhub.exception.EntityNotFoundException;
 import com.example.bookhub.model.dto.BookCreateDTO;
 import com.example.bookhub.model.entity.Book;
 import com.example.bookhub.model.entity.Review;
@@ -28,7 +29,7 @@ public class BookService {
 
     public Book findBookById(Long id) {
         return bookRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Książka o podanym id nie istnieje: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Książka o podanym ID nie została znaleziona."));
     }
 
     public void addBook(@Validated BookCreateDTO bookCreateDTO) {

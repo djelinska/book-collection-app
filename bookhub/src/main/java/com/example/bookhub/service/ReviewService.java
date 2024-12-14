@@ -1,5 +1,6 @@
 package com.example.bookhub.service;
 
+import com.example.bookhub.exception.EntityNotFoundException;
 import com.example.bookhub.model.dto.ReviewCreateDTO;
 import com.example.bookhub.model.entity.Book;
 import com.example.bookhub.model.entity.Review;
@@ -9,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
@@ -19,8 +18,8 @@ public class ReviewService {
     private final UserService userService;
 
     public Review findReviewById(Long id) {
-        Optional<Review> review = reviewRepository.findById(id);
-        return review.orElseThrow(() -> new IllegalArgumentException("Recenzja o podanym id nie istnieje: " + id));
+        return reviewRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Recenzja o podanym ID nie została znaleziona."));
     }
 
     public void addReview(@Validated ReviewCreateDTO reviewCreateDTO, Long bookId) {

@@ -1,6 +1,7 @@
 package com.example.bookhub.service;
 
 import com.example.bookhub.enums.ShelfType;
+import com.example.bookhub.exception.EntityNotFoundException;
 import com.example.bookhub.model.dto.ShelfCreateDTO;
 import com.example.bookhub.model.dto.ShelfUpdateDTO;
 import com.example.bookhub.model.entity.Shelf;
@@ -35,7 +36,7 @@ public class ShelfService {
 
     public Shelf findShelfById(Long id) {
         return shelfRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Półka o podanym id nie istnieje: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Półka o podanym ID nie została znaleziona."));
     }
 
     public Shelf findShelfByNameAndUser(String name, User user) {

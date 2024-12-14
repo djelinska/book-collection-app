@@ -24,6 +24,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -54,42 +55,26 @@ public class UserProfileController {
     }
 
     @PostMapping("/edit")
-    public String updatePassword(@Valid @ModelAttribute("user") UserUpdateDTO userUpdateDTO, BindingResult result, Model model) {
-        return userService.updateUserProfile(userUpdateDTO, result);
+    public String updatePassword(@Valid @ModelAttribute("user") UserUpdateDTO userUpdateDTO, BindingResult result, Model model, RedirectAttributes redirectAttributes) {
+        return userService.updateUserProfile(userUpdateDTO, result, redirectAttributes);
     }
 
     @PostMapping("/delete")
-    public String deleteAccount() {
+    public String deleteAccount(RedirectAttributes redirectAttributes) {
         User user = userService.getCurrentUser();
-
         userService.deleteUser(user);
 
-        return "redirect:/profile";
+        redirectAttributes.addFlashAttribute("successMessage", "Twoje konto zostało pomyślnie usunięte.");
+
+        return "redirect:/auth/register";
     }
 
-    @GetMapping("/profile/backup")
-    public ResponseEntity<Resource> createBackup() {
+    @GetMapping("/backup")
+    public ResponseEntity<Resource> createBackup(RedirectAttributes redirectAttributes) {
         try {
             User user = userService.getCurrentUser();
 
-            List<ShelfBackupDTO> shelvesBackup = new ArrayList<>();
-            for (Shelf shelf : user.getShelves()) {
-                ShelfBackupDTO shelfBackupDTO = new ShelfBackupDTO();
-                shelfBackupDTO.setName(shelf.getName());
-
-                List<Long> bookIds = shelf.getBooks().stream()
-                        .map(Book::getId)
-                        .collect(Collectors.toList());
-                shelfBackupDTO.setBookIds(bookIds);
-
-                shelvesBackup.add(shelfBackupDTO);
-            }
-
-            UserBackupDTO userBackupDTO = new UserBackupDTO();
-            userBackupDTO.setUsername(user.getUsername());
-            userBackupDTO.setShelves(shelvesBackup);
-
-            byte[] backupData = jacksonObjectMapper.writeValueAsBytes(userBackupDTO);
+            byte[] backupData = userService.createBackup(user);
 
             Resource resource = new ByteArrayResource(backupData);
             String filename = "backup_" + user.getUsername() + ".json";
@@ -100,40 +85,34 @@ public class UserProfileController {
                     .body(resource);
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            redirectAttributes.addFlashAttribute("errorMessage", "Błąd podczas tworzenia kopii zapasowej.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header(HttpHeaders.LOCATION, "/profile")
+                    .build();
         }
     }
 
-    @PostMapping("/profile/import")
-    public String importBackup(@RequestParam("file") MultipartFile file) {
+    @PostMapping("/import")
+    public String importBackup(@RequestParam("file") MultipartFile file, Model model, RedirectAttributes redirectAttributes) {
+        if (file == null || file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Plik nie został załączony");
+            return "redirect:/profile";
+        }
+
+        String contentType = file.getContentType();
+        if (!contentType.equals("application/json")) {
+            redirectAttributes.addFlashAttribute("error", "Niedozwolony format pliku. Wymagany format to JSON");
+            return "redirect:/profile";
+        }
+
         try {
             String json = new String(file.getBytes(), StandardCharsets.UTF_8);
-            UserBackupDTO userBackupDTO = jacksonObjectMapper.readValue(json, UserBackupDTO.class);
+            userService.importBackup(json);
 
-            User user = userService.getCurrentUser();
-
-            shelfService.deleteUserShelves(user);
-            shelfService.initializeUserShelves(user);
-
-            for (ShelfBackupDTO shelfBackupDTO : userBackupDTO.getShelves()) {
-                Shelf shelf = shelfService.findShelfByNameAndUser(shelfBackupDTO.getName(), user);
-                if (shelf == null) {
-                    shelf = new Shelf();
-                    shelf.setName(shelfBackupDTO.getName());
-                    shelf.setUser(user);
-                    shelfService.saveShelf(shelf);
-                }
-
-                for (Long bookId : shelfBackupDTO.getBookIds()) {
-                    Book book = bookService.findBookById(bookId);
-                    if (book != null) {
-                        shelfBookFacade.addBookToShelf(bookId, shelf.getId());
-                    }
-                }
-            }
-
-            return "redirect:/shelves";
+            redirectAttributes.addFlashAttribute("successMessage", "Kopia zapasowa została pomyślnie zaimportowana.");
+            return "redirect:/profile";
         } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Błąd podczas importowania kopii zapasowej.");
             return "redirect:/profile";
         }
     }

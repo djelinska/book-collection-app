@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/auth")
@@ -24,8 +25,26 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String handleRegistration(@Valid @ModelAttribute("user") UserRegistrationDTO userRegistrationDTO, BindingResult result) {
-        return userService.registerUser(userRegistrationDTO, result);
+    public String handleRegistration(@Valid @ModelAttribute("user") UserRegistrationDTO userRegistrationDTO, BindingResult result, RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            return "auth/register";
+        }
+
+        if (userService.usernameExists(userRegistrationDTO.getUsername())) {
+            result.rejectValue("username", "error.username", "Nazwa użytkownika już istnieje");
+            return "auth/register";
+        }
+
+        if (!userRegistrationDTO.getPassword().equals(userRegistrationDTO.getConfirmPassword())) {
+            result.rejectValue("confirmPassword", "error.confirmPassword", "Hasła nie są takie same");
+            return "auth/register";
+        }
+
+        userService.registerUser(userRegistrationDTO);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Rejestracja zakończona sukcesem! Możesz się teraz zalogować.");
+
+        return "redirect:/auth/login";
     }
 
     @GetMapping("/login")
