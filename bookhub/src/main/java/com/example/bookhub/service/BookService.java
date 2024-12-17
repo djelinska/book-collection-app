@@ -1,15 +1,18 @@
 package com.example.bookhub.service;
 
+import com.example.bookhub.BookSpecifications;
 import com.example.bookhub.enums.Genre;
 import com.example.bookhub.enums.Language;
 import com.example.bookhub.exception.EntityNotFoundException;
-import com.example.bookhub.model.dto.BookCreateDTO;
+import com.example.bookhub.model.dto.AdminBookCreateDTO;
+import com.example.bookhub.model.dto.AdminBookUpdateDTO;
 import com.example.bookhub.model.entity.Book;
 import com.example.bookhub.model.entity.Review;
 import com.example.bookhub.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -21,10 +24,17 @@ public class BookService {
     private final BookRepository bookRepository;
 
     public Page<Book> searchBooks(String query, Genre genre, Language language, Pageable pageable) {
-        if ((query == null || query.trim().isEmpty()) && genre == null && language == null) {
-            return bookRepository.findAll(pageable);
-        }
-        return bookRepository.searchBooks(query, genre, language, pageable);
+        Specification<Book> spec = Specification
+                .where(BookSpecifications.hasQuery(query))
+                .and(BookSpecifications.hasGenre(genre))
+                .and(BookSpecifications.hasLanguage(language));
+
+        return bookRepository.findAll(spec, pageable);
+    }
+
+    public Page<Book> searchBooks(String query, Pageable pageable) {
+        Specification<Book> spec = BookSpecifications.hasQuery(query);
+        return bookRepository.findAll(spec, pageable);
     }
 
     public Book findBookById(Long id) {
@@ -32,19 +42,51 @@ public class BookService {
                 .orElseThrow(() -> new EntityNotFoundException("Książka o podanym ID nie została znaleziona."));
     }
 
-    public void addBook(@Validated BookCreateDTO bookCreateDTO) {
+    public void addBook(@Validated AdminBookCreateDTO adminBookCreateDTO) {
         Book book = new Book();
 
-        book.setTitle(bookCreateDTO.getTitle());
-        book.setAuthor(bookCreateDTO.getAuthor());
-        book.setPublisher(bookCreateDTO.getPublisher());
-        book.setIsbn(bookCreateDTO.getIsbn());
-        book.setPublicationYear(bookCreateDTO.getPublicationYear());
-        book.setGenre(bookCreateDTO.getGenre());
-        book.setPageCount(bookCreateDTO.getPageCount());
-        book.setLanguage(bookCreateDTO.getLanguage());
-        book.setDescription(bookCreateDTO.getDescription());
-        book.setImagePath(bookCreateDTO.getImagePath());
+        populateBookFromDto(book,
+                adminBookCreateDTO.getTitle(),
+                adminBookCreateDTO.getAuthor(),
+                adminBookCreateDTO.getPublisher(),
+                adminBookCreateDTO.getIsbn(),
+                adminBookCreateDTO.getPublicationYear(),
+                adminBookCreateDTO.getGenre(),
+                adminBookCreateDTO.getPageCount(),
+                adminBookCreateDTO.getLanguage(),
+                adminBookCreateDTO.getDescription(),
+                adminBookCreateDTO.getImagePath());
+    }
+
+    public void updateBook(Long id, @Validated AdminBookUpdateDTO adminBookUpdateDTO) {
+        Book book = findBookById(id);
+
+        String imagePath = adminBookUpdateDTO.getImagePath() == null ? book.getImagePath() : adminBookUpdateDTO.getImagePath();
+
+        populateBookFromDto(book,
+                adminBookUpdateDTO.getTitle(),
+                adminBookUpdateDTO.getAuthor(),
+                adminBookUpdateDTO.getPublisher(),
+                adminBookUpdateDTO.getIsbn(),
+                adminBookUpdateDTO.getPublicationYear(),
+                adminBookUpdateDTO.getGenre(),
+                adminBookUpdateDTO.getPageCount(),
+                adminBookUpdateDTO.getLanguage(),
+                adminBookUpdateDTO.getDescription(),
+                imagePath);
+    }
+
+    private void populateBookFromDto(Book book, String title, String author, String publisher, String isbn, int publicationYear, Genre genre, int pageCount, Language language, String description, String imagePath) {
+        book.setTitle(title);
+        book.setAuthor(author);
+        book.setPublisher(publisher);
+        book.setIsbn(isbn);
+        book.setPublicationYear(publicationYear);
+        book.setGenre(genre);
+        book.setPageCount(pageCount);
+        book.setLanguage(language);
+        book.setDescription(description);
+        book.setImagePath(imagePath);
 
         bookRepository.save(book);
     }
@@ -60,5 +102,9 @@ public class BookService {
         book.setNumberOfRatings(totalRatings);
         book.setAverageRating(averageRating);
         bookRepository.save(book);
+    }
+
+    public void deleteBookById(Long id) {
+        bookRepository.deleteById(id);
     }
 }

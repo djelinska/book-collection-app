@@ -39,7 +39,6 @@ public class SecurityConfig {
                         request
                                 .requestMatchers("/h2-console/**").permitAll()
                                 .requestMatchers("/auth/**").permitAll()
-                                .requestMatchers("/home").hasRole("USER")
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated())
 //                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -47,7 +46,13 @@ public class SecurityConfig {
 //                .addFilterBefore(authenticationTokenFilter(), UsernamePasswordAuthenticationFilter.class)
                 .formLogin(form -> form
                         .loginPage("/auth/login").permitAll()
-                        .defaultSuccessUrl("/home", true)
+                        .successHandler((request, response, authentication) -> {
+                            if (authentication.getAuthorities().stream().anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"))) {
+                                response.sendRedirect("/admin");
+                            } else {
+                                response.sendRedirect("/home");
+                            }
+                        })
                         .failureUrl("/auth/login?error=true")
                         .permitAll()
                 )

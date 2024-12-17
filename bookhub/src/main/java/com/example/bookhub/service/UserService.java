@@ -1,10 +1,8 @@
 package com.example.bookhub.service;
 
 import com.example.bookhub.enums.Role;
-import com.example.bookhub.model.dto.ShelfBackupDTO;
-import com.example.bookhub.model.dto.UserBackupDTO;
-import com.example.bookhub.model.dto.UserRegistrationDTO;
-import com.example.bookhub.model.dto.UserUpdateDTO;
+import com.example.bookhub.exception.EntityNotFoundException;
+import com.example.bookhub.model.dto.*;
 import com.example.bookhub.model.entity.Book;
 import com.example.bookhub.model.entity.Shelf;
 import com.example.bookhub.model.entity.User;
@@ -12,6 +10,8 @@ import com.example.bookhub.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,8 +40,18 @@ public class UserService {
         user.setUsername(userRegistrationDTO.getUsername());
         user.setPassword(passwordEncoder.encode(userRegistrationDTO.getPassword()));
         user.setRole(Role.ROLE_USER);
-        userRepository.save(user);
 
+        userRepository.save(user);
+        shelfService.initializeUserShelves(user);
+    }
+
+    public void registerUserByAdmin(AdminUserRegistrationDTO adminUserRegistrationDTO) {
+        User user = new User();
+        user.setUsername(adminUserRegistrationDTO.getUsername());
+        user.setPassword(passwordEncoder.encode(adminUserRegistrationDTO.getPassword()));
+        user.setRole(adminUserRegistrationDTO.getRole() != null ? adminUserRegistrationDTO.getRole() : Role.ROLE_USER);
+
+        userRepository.save(user);
         shelfService.initializeUserShelves(user);
     }
 
@@ -49,11 +59,38 @@ public class UserService {
         return userRepository.findByUsername(username).isPresent();
     }
 
+    public Page<User> searchUsers(String query, Pageable pageable) {
+        if ((query == null || query.trim().isEmpty())) {
+            return userRepository.findAll(pageable);
+        }
+        return userRepository.findByUsernameContainingIgnoreCase(query, pageable);
+    }
+
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Użytkownik o podanej nazwie nie istnieje: " + username));
+    }
+
+    public User findUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Użytkownik o podanym ID nie został znaleziony."));
+    }
+
+    public void updateUser(Long id, AdminUserUpdateDTO adminUserUpdateDTO) {
+        User user = findUserById(id);
+
+        user.setUsername(adminUserUpdateDTO.getUsername());
+        user.setRole(adminUserUpdateDTO.getRole());
+
+        userRepository.save(user);
+    }
+
+    public boolean isLastAdmin(Long userId) {
+        long adminCount = userRepository.countByRole(Role.ROLE_ADMIN);
+
+        return adminCount <= 1 && findUserById(userId).getRole().equals(Role.ROLE_ADMIN);
     }
 
     public String updateUserProfile(@Validated UserUpdateDTO userUpdateDTO, BindingResult result, RedirectAttributes redirectAttributes) {
@@ -83,6 +120,10 @@ public class UserService {
 
     public void deleteUser(User user) {
         userRepository.delete(user);
+    }
+
+    public void deleteUserById(Long id) {
+        userRepository.deleteById(id);
     }
 
     @Transactional

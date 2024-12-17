@@ -2,7 +2,6 @@ package com.example.bookhub.controller;
 
 import com.example.bookhub.enums.Genre;
 import com.example.bookhub.enums.Language;
-import com.example.bookhub.model.dto.BookCreateDTO;
 import com.example.bookhub.model.dto.ReviewCreateDTO;
 import com.example.bookhub.model.entity.Book;
 import com.example.bookhub.model.entity.Review;
@@ -19,10 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -77,40 +73,6 @@ public class BookController {
         model.addAttribute("sortDirection", sortDirection);
 
         return "books/list-books";
-    }
-
-    @GetMapping("/add")
-    public String showAddBookForm(Model model) {
-        model.addAttribute("book", new BookCreateDTO());
-        model.addAttribute("genres", Genre.values());
-        model.addAttribute("languages", Language.values());
-        return "books/add-book";
-    }
-
-    @PostMapping("/add")
-    public String addBook(@Valid @ModelAttribute("book") BookCreateDTO bookCreateDTO,
-                          BindingResult result, Model model,
-                          @RequestParam("image") MultipartFile imageFile) {
-        if (result.hasErrors()) {
-            model.addAttribute("genres", Genre.values());
-            model.addAttribute("languages", Language.values());
-            return "books/add-book";
-        }
-
-        if(imageFile == null || imageFile.isEmpty()) {
-            result.rejectValue("image", "error.image", "Okładka książki jest wymagana");
-        } else if (fileService.isImageFileValid(imageFile, result)) {
-            try {
-                String path = fileService.saveImage(imageFile, bookCreateDTO.getTitle());
-                bookCreateDTO.setImagePath(path);
-            } catch (IOException e) {
-                result.rejectValue("image", "error.image", "Nie udało się zapisać okładki");
-            }
-        }
-
-        bookService.addBook(bookCreateDTO);
-
-        return "redirect:/books";
     }
 
     @GetMapping("/{id}")

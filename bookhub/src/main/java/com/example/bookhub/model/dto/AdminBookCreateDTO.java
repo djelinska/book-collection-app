@@ -8,7 +8,7 @@ import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
-public class BookCreateDTO {
+public class AdminBookCreateDTO {
     @NotBlank(message = "Tytuł książki jest wymagany")
     @Size(max = 200, message = "Tytuł książki nie może mieć więcej niż 200 znaków")
     private String title;
@@ -28,12 +28,14 @@ public class BookCreateDTO {
     @PublicationYearConstraint
     private int publicationYear;
 
+    @NotNull(message = "Gatunek książki jest wymagany")
     private Genre genre;
 
     @Min(value = 1, message = "Liczba stron musi wynosić co najmniej 1")
     @Max(value = 10000, message = "Liczba stron nie może być większa niż 10000")
     private int pageCount;
 
+    @NotNull(message = "Język książki jest wymagany")
     private Language language;
 
     @NotBlank(message = "Opis książki jest wymagany")

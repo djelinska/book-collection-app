@@ -1,16 +1,10 @@
 package com.example.bookhub.controller;
 
-import com.example.bookhub.model.dto.ShelfBackupDTO;
-import com.example.bookhub.model.dto.UserBackupDTO;
 import com.example.bookhub.model.dto.UserUpdateDTO;
-import com.example.bookhub.model.entity.Book;
-import com.example.bookhub.model.entity.Shelf;
 import com.example.bookhub.model.entity.User;
-import com.example.bookhub.service.BookService;
-import com.example.bookhub.service.ShelfBookFacade;
-import com.example.bookhub.service.ShelfService;
 import com.example.bookhub.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
@@ -19,6 +13,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -27,19 +23,14 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/profile")
 public class UserProfileController {
     private final UserService userService;
-    private final BookService bookService;
-    private final ShelfService shelfService;
-    private final ObjectMapper jacksonObjectMapper;
-    private final ShelfBookFacade shelfBookFacade;
+    private final HttpServletRequest httpServletRequest;
+    private final HttpServletResponse httpServletResponse;
 
     @GetMapping
     public String showProfile(Model model) {
@@ -63,6 +54,9 @@ public class UserProfileController {
     public String deleteAccount(RedirectAttributes redirectAttributes) {
         User user = userService.getCurrentUser();
         userService.deleteUser(user);
+
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.logout(httpServletRequest, httpServletResponse, SecurityContextHolder.getContext().getAuthentication());
 
         redirectAttributes.addFlashAttribute("successMessage", "Twoje konto zostało pomyślnie usunięte.");
 

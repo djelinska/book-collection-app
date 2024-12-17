@@ -10,10 +10,11 @@
         <property name="publicationYear" value="1967" />
         <property name="genre" value="FICTION" />
         <property name="language" value="POLISH" />
-        <property name="isbn" value="978-83-244-0146-2" />
+        <property name="isbn" value="9788324401462" />
         <property name="description" value="Powieść łącząca realizm i fantastykę, o wizytach szatana w Moskwie." />
         <property name="pageCount" value="480" />
         <property name="imagePath" value="example_book_mistrz_i_malgorzata.jpg" />
+        <property name="publisher" value="Państwowy Instytut Wydawniczy" />
     </bean>
 
     <bean id="book2" class="com.example.bookhub.model.entity.Book">
@@ -22,10 +23,11 @@
         <property name="publicationYear" value="1949" />
         <property name="genre" value="DYSTOPIA" />
         <property name="language" value="ENGLISH" />
-        <property name="isbn" value="978-0-452-28423-4" />
+        <property name="isbn" value="9780452284234" />
         <property name="description" value="Klasyka literatury dystopijnej, przedstawiająca totalitarną przyszłość." />
         <property name="pageCount" value="328" />
         <property name="imagePath" value="example_book_1984.jpg" />
+        <property name="publisher" value="Secker &amp; Warburg" />
     </bean>
 
     <bean id="book3" class="com.example.bookhub.model.entity.Book">
@@ -34,10 +36,11 @@
         <property name="publicationYear" value="1866" />
         <property name="genre" value="CLASSIC" />
         <property name="language" value="POLISH" />
-        <property name="isbn" value="978-83-06-03246-5" />
+        <property name="isbn" value="9788306032465" />
         <property name="description" value="Rozważania moralne młodego studenta popełniającego morderstwo." />
         <property name="pageCount" value="672" />
         <property name="imagePath" value="example_book_zbrodnia_i_kara.jpg" />
+        <property name="publisher" value="Wydawnictwo Literackie" />
     </bean>
 
     <bean id="book4" class="com.example.bookhub.model.entity.Book">
@@ -46,10 +49,11 @@
         <property name="publicationYear" value="1997" />
         <property name="genre" value="FANTASY" />
         <property name="language" value="POLISH" />
-        <property name="isbn" value="978-83-7278-007-4" />
+        <property name="isbn" value="9788372780074" />
         <property name="description" value="Pierwsza część przygód młodego czarodzieja w świecie magii." />
         <property name="pageCount" value="320" />
         <property name="imagePath" value="example_book_harry-potter-i-kamien-filozoficzny.jpg" />
+        <property name="publisher" value="Media Rodzina" />
     </bean>
 
     <bean id="book5" class="com.example.bookhub.model.entity.Book">
@@ -58,9 +62,10 @@
         <property name="publicationYear" value="2001" />
         <property name="genre" value="FICTION" />
         <property name="language" value="POLISH" />
-        <property name="isbn" value="978-83-7301-973-7" />
+        <property name="isbn" value="9788373019737" />
         <property name="description" value="Niezapomniana opowieść o miłości, tajemnicy i pasji do książek." />
         <property name="pageCount" value="520" />
         <property name="imagePath" value="example_book_cien_wiatru.jpeg" />
+        <property name="publisher" value="Muza SA" />
     </bean>
 </beans>
