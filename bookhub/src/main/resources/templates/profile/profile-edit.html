@@ -11,7 +11,7 @@
     <div th:replace="fragments :: navbar"></div>
 
     <div class="container mt-5">
-        <h1>Edytuj Profil</h1>
+        <h1>Edytuj profil</h1>
         <form th:action="@{/profile/edit}" th:object="${user}" method="post">
             <div class="mb-3">
                 <label for="currentPassword" class="form-label">Aktualne hasło</label>

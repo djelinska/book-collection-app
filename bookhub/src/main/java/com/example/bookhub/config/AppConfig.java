@@ -34,6 +34,7 @@ public class AppConfig {
                 admin.setPassword(passwordEncoder.encode("admin"));
                 admin.setRole(Role.ROLE_ADMIN);
                 userRepository.save(admin);
+                shelfService.initializeUserShelves(admin);
             }
             if (!userRepository.existsByUsername("user")) {
                 User user = new User();

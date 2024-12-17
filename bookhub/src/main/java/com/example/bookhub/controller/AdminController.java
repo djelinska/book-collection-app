@@ -3,14 +3,14 @@ package com.example.bookhub.controller;
 import com.example.bookhub.enums.Genre;
 import com.example.bookhub.enums.Language;
 import com.example.bookhub.enums.Role;
-import com.example.bookhub.model.dto.AdminBookCreateDTO;
-import com.example.bookhub.model.dto.AdminBookUpdateDTO;
-import com.example.bookhub.model.dto.AdminUserRegistrationDTO;
-import com.example.bookhub.model.dto.AdminUserUpdateDTO;
+import com.example.bookhub.model.dto.*;
 import com.example.bookhub.model.entity.Book;
+import com.example.bookhub.model.entity.Review;
+import com.example.bookhub.model.entity.Shelf;
 import com.example.bookhub.model.entity.User;
 import com.example.bookhub.service.BookService;
 import com.example.bookhub.service.FileService;
+import com.example.bookhub.service.ReviewService;
 import com.example.bookhub.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,6 +39,7 @@ public class AdminController {
     private final FileService fileService;
     private final HttpServletRequest httpServletRequest;
     private final HttpServletResponse httpServletResponse;
+    private final ReviewService reviewService;
 
     @GetMapping
     public String dashboard() {
@@ -85,7 +86,7 @@ public class AdminController {
     }
 
     @GetMapping("/users/{id}/edit")
-    public String editUser(@PathVariable Long id, Model model) {
+    public String showEditUserForm(@PathVariable Long id, Model model) {
         User user = userService.findUserById(id);
 
         AdminUserUpdateDTO adminUserUpdateDTO = new AdminUserUpdateDTO();
@@ -199,7 +200,7 @@ public class AdminController {
     }
 
     @GetMapping("/books/{id}/edit")
-    public String editBook(@PathVariable Long id, Model model) {
+    public String showEditBookForm(@PathVariable Long id, Model model) {
         Book book = bookService.findBookById(id);
 
         AdminBookUpdateDTO adminBookUpdateDTO = new AdminBookUpdateDTO();
@@ -253,5 +254,80 @@ public class AdminController {
         bookService.deleteBookById(id);
         redirectAttributes.addFlashAttribute("successMessage", "Książka została usunięta.");
         return "redirect:/admin/books";
+    }
+
+    @GetMapping("/reviews")
+    public String showReviews(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            Model model) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Review> reviews = reviewService.searchReviews(query, pageable);
+
+        model.addAttribute("active", "reviews");
+        model.addAttribute("reviews", reviews);
+        model.addAttribute("query", query);
+
+        return "admin/list-reviews";
+    }
+
+    @GetMapping("/reviews/add")
+    public String showAddReviewForm(Model model) {
+        model.addAttribute("review", new AdminReviewCreateDTO());
+        model.addAttribute("books", bookService.getAllBooks());
+        model.addAttribute("users", userService.getAllUsers());
+        return "admin/add-review";
+    }
+
+    @PostMapping("/reviews/add")
+    public String addReview(@Valid @ModelAttribute("review") AdminReviewCreateDTO adminReviewCreateDTO, BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            model.addAttribute("books", bookService.getAllBooks());
+            model.addAttribute("users", userService.getAllUsers());
+            return "admin/add-review";
+        }
+
+        reviewService.addReviewByAdmin(adminReviewCreateDTO);
+
+        return "redirect:/admin/reviews";
+    }
+
+    @GetMapping("/reviews/{id}/edit")
+    public String showEditReviewForm(@PathVariable Long id, Model model) {
+        Review review = reviewService.findReviewById(id);
+
+        AdminReviewUpdateDTO adminReviewUpdateDTO = new AdminReviewUpdateDTO();
+        adminReviewUpdateDTO.setId(review.getId());
+        adminReviewUpdateDTO.setRating(review.getRating());
+        adminReviewUpdateDTO.setContent(review.getContent());
+        adminReviewUpdateDTO.setBookId(review.getBook().getId());
+        adminReviewUpdateDTO.setUserId(review.getUser().getId());
+
+        model.addAttribute("review", adminReviewUpdateDTO);
+        model.addAttribute("books", bookService.getAllBooks());
+        model.addAttribute("users", userService.getAllUsers());
+        return "admin/edit-review";
+    }
+
+    @PostMapping("/reviews/{id}/edit")
+    public String editReview(@PathVariable Long id, @Valid @ModelAttribute("review") AdminReviewUpdateDTO adminReviewUpdateDTO, BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            model.addAttribute("books", bookService.getAllBooks());
+            model.addAttribute("users", userService.getAllUsers());
+            return "admin/edit-review";
+        }
+
+        reviewService.updateReviewByAdmin(id, adminReviewUpdateDTO);
+
+        return "redirect:/admin/reviews";
+    }
+
+    @PostMapping("/reviews/{id}/delete")
+    public String deleteReview(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        reviewService.deleteReviewById(id);
+        redirectAttributes.addFlashAttribute("successMessage", "Recenzja została usunięta.");
+        return "redirect:/admin/reviews";
     }
 }

@@ -11,7 +11,7 @@
     <div th:replace="fragments :: navbar"></div>
 
     <div class="container mt-5">
-        <h1>Panel Administratora</h1>
+        <h1>Panel administratora</h1>
 
         <div th:replace="fragments :: admin-menu"></div>
 
@@ -34,27 +34,30 @@
             </div>
         </form>
 
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th class="col-2">Nazwa użytkownika</th>
-                <th class="col-1">Rola</th>
-                <th class="col-1">Akcje</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="user : ${users}">
-                <td th:text="${user.username}"></td>
-                <td th:text="${user.role.displayName}"></td>
-                <td>
-                    <a th:href="@{/admin/users/{id}/edit(id=${user.id})}" class="btn btn-outline-success">Edytuj</a>
-                    <form th:if="${user.id != loggedUserId}" th:action="@{/admin/users/{id}/delete(id=${user.id})}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-outline-danger">Usuń</button>
-                    </form>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th class="col-2">Nazwa użytkownika</th>
+                    <th class="col-1">Rola</th>
+                    <th class="col-1">Akcje</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.username}"></td>
+                    <td th:text="${user.role.displayName}"></td>
+                    <td>
+                        <a th:href="@{/admin/users/{id}/edit(id=${user.id})}" class="btn btn-outline-success">Edytuj</a>
+                        <form th:if="${user.id != loggedUserId}" th:action="@{/admin/users/{id}/delete(id=${user.id})}"
+                              method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-danger">Usuń</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
         <div class="mt-4" th:if="${users.totalPages > 0}">
             <ul class="pagination justify-content-center mb-0">

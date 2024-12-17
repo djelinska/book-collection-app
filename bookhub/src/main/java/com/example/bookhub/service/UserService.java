@@ -59,6 +59,10 @@ public class UserService {
         return userRepository.findByUsername(username).isPresent();
     }
 
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
     public Page<User> searchUsers(String query, Pageable pageable) {
         if ((query == null || query.trim().isEmpty())) {
             return userRepository.findAll(pageable);

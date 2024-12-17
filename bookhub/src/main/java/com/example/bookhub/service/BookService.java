@@ -23,6 +23,10 @@ import java.util.List;
 public class BookService {
     private final BookRepository bookRepository;
 
+    public List<Book> getAllBooks() {
+        return bookRepository.findAll();
+    }
+
     public Page<Book> searchBooks(String query, Genre genre, Language language, Pageable pageable) {
         Specification<Book> spec = Specification
                 .where(BookSpecifications.hasQuery(query))

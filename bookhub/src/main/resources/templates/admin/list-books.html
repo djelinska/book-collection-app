@@ -11,7 +11,7 @@
     <div th:replace="fragments :: navbar"></div>
 
     <div class="container mt-5">
-        <h1>Panel Administratora</h1>
+        <h1>Panel administratora</h1>
 
         <div th:replace="fragments :: admin-menu"></div>
 
@@ -34,7 +34,11 @@
             </div>
         </form>
 
-        <div class="table-responsive">
+        <div th:if="${books.content.isEmpty()}" class="alert alert-warning" role="alert">
+            Brak książek do wyświetlenia.
+        </div>
+
+        <div th:if="${!books.content.isEmpty()}" class="table-responsive">
             <table class="table table-striped">
                 <thead>
                 <tr>
