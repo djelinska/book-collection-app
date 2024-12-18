@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class HomeController {
     public final StatisticsService statisticsService;
 
+    @GetMapping("/")
+    public String welcome() {
+        return "welcome";
+    }
+
     @GetMapping("/home")
     public String home(Model model) {
         model.addAttribute("stats", statisticsService.getCurrentUserStats());
